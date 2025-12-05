@@ -16,7 +16,7 @@
 
         body {
     background-color: #000;
-    background-image: url('images/bg.png'); /* 添加这一行 */
+    background-image: url('images1/bg.png'); /* 添加这一行 */
     background-size: cover; /* 添加这一行 */
     background-position: center; /* 添加这一行 */
     background-repeat: no-repeat; /* 添加这一行 */
@@ -530,9 +530,9 @@ body::before {
                     const index = r * 9 + c + 1;
                     const img = document.createElement('img');
                     
-                    // 注意：这里假设你的图片是 .png 格式
+                    // 注意：这里假设你的图片是 .jpg 格式
                     // 如果是 .jpg，请改为 .jpg
-                    img.src = `images/${index}.png`; 
+                    img.src = `images1/${index}.jpg`; 
                     img.loading = index > (GRID_SIZE * 2) ? 'lazy' : 'eager';
                     img.decoding = 'async';
                     img.width = 50;   // 设置实际显示大小
