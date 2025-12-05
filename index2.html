@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>石火电竞 BINGO单</title>
+    <style>
+        /* --- 1. 基础设置 --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft YaHei", "Heiti SC", sans-serif;
+            user-select: none; 
+        }
+
+        body {
+    background-color: #000;
+    background-image: url('images/bg.png'); /* 添加这一行 */
+    background-size: cover; /* 添加这一行 */
+    background-position: center; /* 添加这一行 */
+    background-repeat: no-repeat; /* 添加这一行 */
+    background-attachment: fixed; /* 添加这一行 */
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 10px;
+    padding-bottom: 80px;
+    position: relative;
+}
+
+/* 然后在body样式的后面添加这个伪元素 */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.1);
+    z-index: -1;
+}
+
+        /* 顶部标题 */
+        .header {
+            margin: 10px 0 20px 0;
+            text-align: center;
+        }
+        h1 {
+            font-style: italic;
+            color: #fff;
+            text-shadow: 0 0 10px #ff0000;
+            font-size: 32px;
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+        }
+        .subtitle {
+            color: #cc0000;
+            font-size: 12px;
+            letter-spacing: 5px;
+            font-weight: bold;
+        }
+
+        /* --- 2. 玩法按钮区域 --- */
+        .controls-area {
+            width: 100%;
+            max-width: 720px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px 15px;
+            padding: 10px;
+            background: rgba(20, 0, 0, 0.5);
+            border: 1px solid #330000;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            background: linear-gradient(90deg, #2b0000, #1a0000);
+            border: 1px solid #550000;
+            padding: 12px 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .txt-left { font-size: 16px; font-weight: bold; color: #fff; text-shadow: 0 0 2px #000; }
+        .txt-price { font-size: 14px; color: #ffcccc; margin-left: 5px; }
+        .txt-right { font-size: 14px; display: flex; align-items: center; }
+        .txt-bao { color: #aaa; font-size: 12px; margin-right: 5px; }
+        .txt-val { color: #fff; font-weight: 900; font-size: 16px; background: #cc0000; padding: 0 4px; border-radius: 2px; }
+
+        .mode-btn:hover { border-color: #ff4444; background: #330000; }
+        .mode-btn.active {
+            background: linear-gradient(90deg, #990000, #550000);
+            border: 1px solid #ffaaaa;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+            transform: scale(1.02);
+            z-index: 2;
+        }
+        .mode-btn.active .txt-price { color: #fff; }
+        .mode-btn.active .txt-val { background: #fff; color: #cc0000; }
+
+        /* --- 3. 9x9 物品网格 --- */
+        .grid-wrapper {
+            width: 100%;
+            max-width: 720px;
+            margin-bottom: 20px;
+            border: 2px solid #330000;
+            padding: 3px;
+            background: #110000;
+            box-shadow: 0 0 20px rgba(150, 0, 0, 0.2);
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            grid-template-rows: repeat(9, 1fr);
+            gap: 2px;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+        }
+
+        .cell {
+            background-color: #0a0a0a;
+            border: 1px solid #440000;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .cell img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.9;
+            transition: 0.2s;
+            display: block;
+        }
+
+        .cell span.fallback-num {
+            position: absolute;
+            color: #330;
+            font-size: 12px;
+            z-index: 1;
+        }
+
+        .cell.active {
+            border: 1px solid #ff0000;
+        }
+        .cell.active img {
+            opacity: 0.3;
+            filter: grayscale(100%);
+        }
+        .cell.active::after {
+            content: "✔";
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ff0000;
+            font-size: 24px;
+            font-weight: 900;
+            text-shadow: 0 0 5px white;
+            z-index: 10;
+        }
+
+        /* --- 4. 底部操作栏 --- */
+        .action-bar {
+            width: 100%;
+            max-width: 720px;
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px; /* 与下方规则区域拉开距离 */
+        }
+        
+        .mini-tip { color: #666; font-size: 12px; margin-bottom: 5px; }
+
+        #resetBtn {
+            background: #cc0000;
+            color: white;
+            border: none;
+            padding: 12px 60px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 10px #ff0000;
+            border-radius: 2px;
+            width: 100%;
+            max-width: 300px;
+        }
+        #resetBtn:active { transform: scale(0.95); }
+
+        .system-btns {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .sys-btn {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            color: #aaa;
+            padding: 8px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: 0.2s;
+        }
+        .sys-btn:hover {
+            color: #fff;
+            border-color: #fff;
+            background: #333;
+        }
+        .sys-btn.file-op {
+            border-color: #550000;
+            color: #d4a5a5;
+        }
+        .sys-btn.file-op:hover {
+            background: #330000;
+            color: #fff;
+            border-color: #ff0000;
+        }
+
+        #fileInput { display: none; }
+
+        /* --- 5. 新增：规则说明区域 --- */
+        .rules-section {
+            width: 100%;
+            max-width: 720px;
+            background: rgba(20, 0, 0, 0.4); /* 深红半透明背景 */
+            border: 1px dashed #440000;
+            padding: 15px;
+            margin-bottom: 40px; /* 底部留白 */
+            border-radius: 4px;
+        }
+
+        .rules-title {
+            color: #ff3333;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+            border-bottom: 1px solid #330000;
+            padding-bottom: 5px;
+        }
+
+        .rules-list {
+            font-size: 18px;
+            color: #ccc;
+            line-height: 1.6;
+            list-style-type: none; /* 去掉默认圆点 */
+        }
+
+        .rules-list li {
+            margin-bottom: 6px;
+            padding-left: 10px;
+            position: relative;
+        }
+        /* 自定义小红点 */
+        .rules-list li::before {
+            content: "▪";
+            color: #cc0000;
+            position: absolute;
+            left: 0;
+        }
+
+        .highlight-gold {
+            color: #ffcc00;
+            font-weight: bold;
+        }
+        
+        .special-note {
+            margin-top: 10px;
+            padding: 8px;
+            background: rgba(255, 204, 0, 0.1);
+            border: 1px solid rgba(255, 204, 0, 0.3);
+            color: #ffddaa;
+            font-size: 13px;
+            text-align: center;
+            border-radius: 4px;
+        }
+
+        /* --- 6. 弹窗 --- */
+        #modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .modal-box {
+            background: #1a0000;
+            border: 2px solid #ff0000;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 0 60px #ff0000;
+            min-width: 320px;
+        }
+        .modal-text {
+            color: #fff;
+            font-size: 20px;
+            margin-bottom: 30px;
+            font-weight: bold;
+            line-height: 1.5;
+        }
+        .modal-btn {
+            background: #ff0000;
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* --- 7. 右下角标识 --- */
+        .brand-info {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            text-align: right;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 204, 0, 0.4);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+            min-width: 180px;
+        }
+
+        .brand-info .highlight {
+            color: #ffcc00;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        /* 微信小程序按钮样式 */
+        .brand-info .weapp-btn {
+            margin-top: 10px;
+            background: linear-gradient(135deg, #8b0000, #cc0000);
+            color: #fff;
+            border: 1px solid #ffcc00;
+            padding: 8px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.3s;
+            width: 100%;
+            text-decoration: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .brand-info .weapp-btn:hover {
+            background: linear-gradient(135deg, #cc0000, #ff3333);
+            border-color: #ffdd44;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(255, 0, 0, 0.4);
+        }
+        
+        .brand-info .weapp-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .brand-info .weapp-btn .weapp-icon {
+            font-size: 14px;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>石火电竞</h1>
+        <div class="subtitle">BINGO MISSION</div>
+    </div>
+
+    <!-- 玩法按钮区 -->
+    <div class="controls-area">
+        <div class="mode-btn active" data-mode="3" onclick="selectMode(3, this)">
+            <div class="txt-left">3连 <span class="txt-price">999R</span></div>
+            <div class="txt-right"><span class="txt-bao">保</span><span class="txt-val">2288W</span></div>
+        </div>
+
+        <div class="mode-btn" data-mode="7" onclick="selectMode(7, this)">
+            <div class="txt-left">7连 <span class="txt-price">5688R</span></div>
+            <div class="txt-right"><span class="txt-bao">保</span><span class="txt-val">8888W</span></div>
+        </div>
+
+        <div class="mode-btn" data-mode="4" onclick="selectMode(4, this)">
+            <div class="txt-left">4连 <span class="txt-price">1388R</span></div>
+            <div class="txt-right"><span class="txt-bao">保</span><span class="txt-val">2888W</span></div>
+        </div>
+
+        <div class="mode-btn" data-mode="8" onclick="selectMode(8, this)">
+            <div class="txt-left">8连 <span class="txt-price">9999R</span></div>
+            <div class="txt-right"><span class="txt-bao">保</span><span class="txt-val">1.5亿</span></div>
+        </div>
+
+        <div class="mode-btn" data-mode="5" onclick="selectMode(5, this)">
+            <div class="txt-left">5连 <span class="txt-price">1888R</span></div>
+            <div class="txt-right"><span class="txt-bao">保</span><span class="txt-val">3488W</span></div>
+        </div>
+
+        <div class="mode-btn" data-mode="9" onclick="selectMode(9, this)">
+            <div class="txt-left">9连 <span class="txt-price">11888R</span></div>
+            <div class="txt-right"><span class="txt-bao">保</span><span class="txt-val">2亿</span></div>
+        </div>
+
+        <div class="mode-btn" data-mode="6" onclick="selectMode(6, this)">
+            <div class="txt-left">6连 <span class="txt-price">3288R</span></div>
+            <div class="txt-right"><span class="txt-bao">保</span><span class="txt-val">5588W</span></div>
+        </div>
+    </div>
+
+    <!-- 9x9 网格 -->
+    <div class="grid-wrapper">
+        <div class="grid-container" id="grid"></div>
+    </div>
+
+    <!-- 底部功能区域 -->
+    <div class="action-bar">
+        <div class="mini-tip">当前目标：<span id="ruleText" style="color:#f00;font-weight:bold;">3</span> 连</div>
+        
+        <button id="resetBtn" onclick="initGame()">重置订单</button>
+
+        <div class="system-btns">
+            <button class="sys-btn file-op" onclick="exportDoc()">💾 导出文档</button>
+            <button class="sys-btn file-op" onclick="triggerImport()">📂 导入文档</button>
+            <button class="sys-btn" onclick="goHome()">↩ 返回主菜单</button>
+        </div>
+        
+        <input type="file" id="fileInput" accept=".json" onchange="handleFileLoad(event)">
+    </div>
+
+    <!-- ★★★ 新增的规则文本区域 ★★★ -->
+    <div class="rules-section">
+        <div class="rules-title">玩法规则</div>
+        <ul class="rules-list">
+            <!-- 纠正：将"坚"改为"竖" -->
+            <li>任意竖横斜连成线即为结单，保底打够也必须连成线才能结单</li>
+            <li>该玩法地图类型由陪玩选择，老板需听从陪玩指挥</li>
+            <li>该玩法摸到的红塞进保险也算进度，老板不可故意不塞红进保险</li>
+            <li>图片中的钥匙卡只分为金卡、红卡、紫卡三类，不特定指定某个钥匙卡</li>
+            <li>同时游戏中：红卡价值必须>200W金卡价值必须>100W</span></li>
+            <li>小于100W的金卡算紫卡，紫卡价值必须>50W</li>
+            <li><span class="highlight-gold"> 特别提示：非洲之心 / 海洋之泪 / 复苏呼吸机 可以当万能格子</span></li>
+        </ul>
+    </div>
+
+    <!-- 右下角标识 - 添加了微信小程序按钮 -->
+    <div class="brand-info">
+        <div class="kook">
+            🎧 KOOK：<span class="highlight">6480</span>
+        </div>
+        <div class="mini-program">
+            📱 服务号/小程序: <span class="highlight">石火电竞</span>
+        </div>
+        <!-- 新增的微信小程序按钮 -->
+        <button class="weapp-btn" onclick="openWeapp()">
+            <span class="weapp-icon">📱</span>
+            <span>打开微信小程序</span>
+        </button>
+    </div>
+
+    <!-- 弹窗 -->
+    <div id="modal">
+        <div class="modal-box">
+            <div class="modal-text">您已完成订单<br>订单已结束</div>
+            <button class="modal-btn" onclick="closeModal()">确定</button>
+        </div>
+    </div>
+
+    <script>
+        const gridEl = document.getElementById('grid');
+        const ruleText = document.getElementById('ruleText');
+        const modal = document.getElementById('modal');
+        const fileInput = document.getElementById('fileInput');
+        
+        const GRID_SIZE = 9;
+        let gridData = [];
+        let currentTarget = 3;
+
+        // 初始化函数
+        function initGame(renderOnly = false) {
+            gridEl.innerHTML = '';
+            
+            if (!renderOnly) {
+                gridData = [];
+            }
+
+            for (let r = 0; r < GRID_SIZE; r++) {
+                if (!renderOnly) {
+                    let rowData = [];
+                    for (let c = 0; c < GRID_SIZE; c++) rowData.push(false);
+                    gridData.push(rowData);
+                }
+
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    
+                    if (renderOnly && gridData[r][c]) {
+                        cell.classList.add('active');
+                    }
+                    
+                    const index = r * 9 + c + 1;
+                    const img = document.createElement('img');
+                    
+                    // 注意：这里假设你的图片是 .png 格式
+                    // 如果是 .jpg，请改为 .jpg
+                    img.src = `images2/${index}.png`; 
+                    img.loading = index > (GRID_SIZE * 2) ? 'lazy' : 'eager';
+                    img.decoding = 'async';
+                    img.width = 50;   // 设置实际显示大小
+                    img.height = 50;
+
+                    const numSpan = document.createElement('span');
+                    numSpan.className = 'fallback-num';
+                    numSpan.innerText = index;
+                    numSpan.style.display = 'none'; 
+                    cell.appendChild(numSpan);
+
+                    img.onerror = function() { 
+                        this.style.display = 'none'; 
+                        numSpan.style.display = 'block'; 
+                    };
+                    cell.appendChild(img);
+
+                    cell.addEventListener('click', () => handleClick(r, c, cell));
+                    gridEl.appendChild(cell);
+                }
+            }
+        }
+
+        function selectMode(num, btn) {
+            currentTarget = num;
+            ruleText.innerText = num;
+            updateModeUI(num);
+            initGame(); 
+        }
+
+        function updateModeUI(targetNum) {
+            document.querySelectorAll('.mode-btn').forEach(b => {
+                b.classList.remove('active');
+                if(parseInt(b.getAttribute('data-mode')) === targetNum) {
+                    b.classList.add('active');
+                }
+            });
+        }
+
+        function handleClick(r, c, cell) {
+            gridData[r][c] = !gridData[r][c];
+            
+            if (gridData[r][c]) {
+                cell.classList.add('active');
+            } else {
+                cell.classList.remove('active');
+            }
+            checkWin();
+        }
+
+        function checkWin() {
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    if (!gridData[r][c]) continue;
+                    if (checkLine(r, c, 0, 1)) return win();
+                    if (checkLine(r, c, 1, 0)) return win();
+                    if (checkLine(r, c, 1, 1)) return win();
+                    if (checkLine(r, c, 1, -1)) return win();
+                }
+            }
+        }
+
+        function checkLine(r, c, dr, dc) {
+            for (let k = 0; k < currentTarget; k++) {
+                const nr = r + k * dr;
+                const nc = c + k * dc;
+                if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE || !gridData[nr][nc]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function win() {
+            setTimeout(() => { modal.style.display = 'flex'; }, 150);
+        }
+        function closeModal() { modal.style.display = 'none'; }
+
+        // 打开微信小程序 - 直接使用你提供的链接
+        function openWeapp() {
+            // 你提供的跳转链接
+            const weappUrl = "https://taix.cn/plugins/mobile/h5/mall/5489/?#/pages/index/index";
+            
+            // 直接在新标签页打开链接
+            window.open(weappUrl, '_blank');
+            
+            // 或者在当前页面跳转
+            // window.location.href = weappUrl;
+        }
+
+        function exportDoc() {
+            const saveData = {
+                target: currentTarget,
+                grid: gridData,
+                timestamp: new Date().toLocaleString()
+            };
+            const dataStr = JSON.stringify(saveData, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Bingo_Save_${currentTarget}连_${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function triggerImport() { fileInput.click(); }
+
+        function handleFileLoad(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.grid && data.target) {
+                        gridData = data.grid;
+                        currentTarget = data.target;
+                        ruleText.innerText = currentTarget;
+                        updateModeUI(currentTarget);
+                        initGame(true); 
+                        alert("导入成功！");
+                    } else {
+                        alert("文件格式不正确");
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert("无法读取文件");
+                }
+                fileInput.value = ''; 
+            };
+            reader.readAsText(file);
+        }
+
+        function goHome() {
+            if(confirm("确定要返回主菜单吗？")) {
+                window.location.href = "index.html";
+            }
+        }
+
+        // 初始化游戏
+        initGame();
+    </script>
+</body>
+</html>
